@@ -22,7 +22,7 @@ class CpCodeMgr:
         
         return self.objCodeMgr.GetStockSectionKind(stockCode)
     
-    def code_name(self, stockCode):
+    def code_to_name(self, stockCode):
         '''종목명을 반환하는 메소드'''
         
         return self.objCodeMgr.CodeToName(stockCode)
