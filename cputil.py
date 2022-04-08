@@ -11,14 +11,20 @@ class CpCodeMgr:
     def code_list(self, market):
         '''market에 해당하는 종목코드 리스트 반환하는 메소드
         
-        :param market: 1: kospi, 2:kosdaq, ...
+        :param market: 0: 구분없음, 1: kospi, 2: kosdaq, 3: freeboard, 4: krx, 5: konex, 
         :return: market에 해당하는 stockCode list
         '''
         
         return self.objCodeMgr.GetStockListByMarket(market)
     
-    def section_code(self, stockCode):
-        '''부구분코드를 반환하는 메소드'''
+    def section(self, stockCode):
+        '''부구분코드를 반환하는 메소드
+        
+        :return: 0: 구분없음, 1: 주권, 2: 투자회사, 3: 부동산투자회사, 4: 선박투자회사, 
+            5: 사회간접자본투융자회사, 6: 주식예탁증서, 7: 신수인수권증권, 8: 신주인수권증서, 
+            9: 주식워런트증권, 10: 상장지수펀드(ETF), 11: 수익증권, 12: 해외ETF, 
+            13: 외국주권, 14: 선물, 15: 옵션, 
+        '''
         
         return self.objCodeMgr.GetStockSectionKind(stockCode)
     
@@ -27,8 +33,27 @@ class CpCodeMgr:
         
         return self.objCodeMgr.CodeToName(stockCode)
     
+    def control(self, stockCode):
+        '''감리구분을 반환하는 메소드
+        
+        :return: 0: 정상, 1: 주의, 2: 경고, 3: 위험예고, 4: 위험, 
+        '''
+        
+        return self.objCodeMgr.GetStockControlKind(stockCode)
+    
+    def supervision(self, stockCode):
+        '''관리구분을 반환하는 메소드
+        
+        :return: 0: 일반종목, 1: 관리, 
+        '''
+        
+        return self.objCodeMgr.GetStockSupervisionKind(stockCode)
+    
     def status(self, stockCode):
-        '''주식상태를 반환하는 메소드'''
+        '''주식상태를 반환하는 메소드
+        
+        :return: 0: 정상, 1: 거래정지, 2: 거래중단, 
+        '''
         
         return self.objCodeMgr.GetStockStatusKind(stockCode)
     
