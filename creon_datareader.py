@@ -10,7 +10,7 @@ import pandas as pd
 from tqdm import trange
 
 from cysysdib import CpStockChart
-# from cputil import 
+from cputil import CpCodeMgr
 from utils import (
     is_time_possible_to_trade, available_latest_dttm, preformat_cjk
 )
