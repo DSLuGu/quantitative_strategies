@@ -133,7 +133,7 @@ class CpStockChart:
         self.objStockChart.SetInputValue(1, ord('2')) # (요청구분) - '1':기간으로 요청, '2':개수로 요청
         self.objStockChart.SetInputValue(4, count) # (요청개수)
         
-        self.objStockChart.SetInputValue(5, caller.rqField) # (요청항목)
+        self.objStockChart.SetInputValue(5, caller.rqFields) # (요청항목)
         self.objStockChart.SetInputValue(6, dwm) # (차트 주기) - 'D':일, 'W':주, 'M':월
         self.objStockChart.SetInputValue(9, ord('1')) # (수정주가) - '0':무수정주가, '1':수정주가
         # 주가는 유무상증자, 배당, 액면분할 등이 생길 때 연속성을 잃고 단층을 보이게 된다.
@@ -191,7 +191,7 @@ class CpStockChart:
         self.objStockChart.SetInputValue(1, ord('2')) # (요청구분) - '1':기간으로 요청, '2':개수로 요청
         self.objStockChart.SetInputValue(4, count) # (요청개수)
         
-        self.objStockChart.SetInputValue(5, caller.rqField) # (요청항목)
+        self.objStockChart.SetInputValue(5, caller.rqFields) # (요청항목)
         self.objStockChart.SetInputValue(6, mt) # (차트 주기) - 'm':분봉, 'T':틱봉
         self.objStockChart.SetInputValue(7, tickRange) # (분틱차트 주기) - 'm':분봉, 'T':틱봉
         self.objStockChart.SetInputValue(9, ord('1')) # (수정주가) - '0':무수정주가, '1':수정주가

@@ -42,6 +42,40 @@ class CreonDataReader:
         self.svStockCodeDF = pd.DataFrame({
             'stockCode': self.svStockCodeList, 'stockName': self.svStockNameList
         }, columns=('stockCode', 'stockName'))
+        
+        # 0: ('날짜', 'date'), 1: ('시간', 'time'), 2: ('시가', 'open'), 
+        # 3: ('고가', 'high'), 4: ('저가', 'low'), 5: ('종가', 'close'), 
+        # 6: ('전일대비', 'diff'), 8: ('거래량', 'volume'), 9: ('거래대금', 'tradeVolume'), 
+        # 10: ('누적체결매도수량', 'cumNegVolume'), 11: ('누적체결매수수량', 'cumPosVolume')
+        # ==> 분, 틱 요청일 때만 제공
+        # 12: ('상장주식수', 'numOfListedShares'), 13: ('시가총액', 'marketCap'), 
+        # 14: ('외국인주문한도수량', 'limitQuantityForForeignOrders'), 
+        # 15: ('외국인주문가능수량', 'quantityAvailableForForeignOrders'), 
+        # 16: ('외국인현보유수량', 'holdingQuantityByForeign'), 
+        # 17: ('외국인현보유비율', 'holdingRatioByForeign'), 18: ('수정주가일자', 'adjustedPrice'), 
+        # 19: ('수정주가비율', 'adjustedPriceRatio'), 20: ('기관순매수', 'netBuyingInstitution'), 
+        # 21: ('기관누적순매수', 'cumNetBuyingInstitution'), 
+        # 22: ('등락주선', 'advanceDeclineLine'), 23: ('등락비율', 'advanceDeclineRatio'), 
+        # 24: ('예탁금', 'deposit'), 25: ('주식회전율', 'stockTurnoverRatio'), 
+        # 26: ('거래성립률', 'transactionRatio'), 37: ('대비부호', 'contrastSign'), 
+        
+        self.rqFields = [
+            0, 1, 2, 3, 4, 
+            5, 6, 8, 9, 12, 
+            13, 14, 15, 16, 17, 
+            18, 19, 20, 21, 22, 
+            23, 24, 25, 26, 37
+        ]
+        self.rqColumns = [
+            'date', 'time', 'open', 'high', 'low', 
+            'close', 'diff', 'volume', 'tradeVolume', 'numOfListedShares', 
+            'marketCap', 'limitQuantityForForeignOrders', 'quantityAvailableForForeignOrders', 
+            'holdingQuantityByForeign', 'holdingRatioByForeign', 
+            'adjustedPrice', 'adjustedPriceRatio', 'netBuyingInstitution', 
+            'cumNetBuyingInstitution', 'advanceDeclineLine', 
+            'advanceDeclineRatio', 'deposit', 'stockTurnoverRatio', 
+            'transactionRatio', 'contrastSign'
+        ]
     
     def update_db(self, dbPath, tickUnit='day'):
         '''
