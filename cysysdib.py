@@ -111,8 +111,8 @@ class CpStockChart:
         rqStatus = self.objStockChart.GetDibStatus()
         rqRet = self.objStockChart.GetDibMsg1()
         
-        if rqStatus != 0: print("Request Status is abnormal[{}]{}".format(rqStatus, rqRet))
-            
+        if rqStatus != 0:
+            print("Request Status is abnormal[{}]{}".format(rqStatus, rqRet))
             return False
         
         return True
