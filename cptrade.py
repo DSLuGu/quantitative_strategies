@@ -2,6 +2,31 @@ import sys
 import win32com.client
 
 
+g_objCpCybos = win32com.client.Dispatch('CpUtil.CpCybos')
+
+
+def check_plus_status(originalFunc):
+    '''originalFunc 콜하기 전에 PLUS 연결 상태 체크하는 데코레이터'''
+    
+    def wrapper(*args, **kwargs):
+        
+        # 프로세스 관리자 권한 실행 여부
+        isAdmin = ctypes.windll.shell32.IsUserAnAdmin()
+        if not isAdmin:
+            print("It isn't a process running in user-admin mode...")
+            return False
+        
+        # 연결 여부 체크
+        bConnect = g_objCpCybos.IsConnect
+        if bConnect == 0:
+            print("PLUS is not propertly connected...")
+            return False
+        
+        return originalFunc(*args, **kwargs)
+    
+    return wrapper
+
+
 class Cp6033:
     '''계좌별 잔고 및 주문체결 평가 현황 데이터를 요청 및 수신'''
     
@@ -15,15 +40,15 @@ class Cp6033:
             print("Fail to initialize order...")
             return None
         
-        account = self.objTrade.AccountNumber[0] # 계좌번호
+        self.account = self.objTrade.AccountNumber[0] # 계좌번호
         # -1: 전체, 1: 주식, 2: 선물/옵션, 16: EUREX, 32: FX 마진, 64: 해외선물
         # 3: 주식(1) + 선물/옵션(2), 96: FX 마진(32) + 해외선물(64)
-        accountFlag = self.objTrade.GoodsList(acc, 1) # 주식상품 구분
+        self.accountFlag = self.objTrade.GoodsList(self.account, 1) # 주식상품 구분
         print("[Account] {}\n[Account flag] {}".format(account, accountFlag))
         
         self.objRq = win32com.client.Dispatch('CpTrade.CpTd6033')
-        self.objRq.SetInputValue(0, account) # 계죄번호
-        self.objRq.SetInputValue(1, accountFlag[0]) # 상품구분 - 주식상품 중 첫 번째
+        self.objRq.SetInputValue(0, self.account) # 계죄번호
+        self.objRq.SetInputValue(1, self.accountFlag[0]) # 상품구분 - 주식상품 중 첫 번째
         self.objRq.SetInputValue(2, 50) # 요청건수(최대 50)
     
     def _check_rq_status(self):
@@ -40,6 +65,7 @@ class Cp6033:
         
         return True
     
+    @check_plus_status
     def rq6033(self, retCode):
         '''실제적인 6033 통신 처리'''
         
@@ -87,3 +113,31 @@ class Cp6033:
             if len(retCode) >= 200: break
         
         return True
+
+
+class CpRPOrder:
+    
+    @check_plus_status
+    def __init__(self):
+        
+        self.objTrade = win32com.client.Dispatch('CpTrade.CpTdUtil')
+        # 주문을 하기 위한 예비 과정을 수행
+        # -1: 오류, 0: 정상, 1: 업무 키 입력 잘못 됨, 2: 계좌 비밀번호 입력 잘못 됨, 3: 취소
+        initCheck = self.objTrade.TradeInit(0)
+        if initCheck != 0:
+            print("Fail to initialize order...")
+            return None
+        
+        self.account = self.objTrade.AccountNumber[0]
+        self.accountFlag = self.objTrade.GoodsList(self.account, 1)
+        
+        self.objOrder = win32com.client.Dispatch('CpTrade.CpTd3011') # 매도/매수 object
+    
+    @check_plus_status
+    def buy(self):
+        
+        self.objOrder.SetInputValue(0, '2') # 2: 매수
+        self.objOrder.SetInputValue(1, self.account)
+        self.objOrder.SetInputValue(2, self.accountFlag[0]) # 상품구분 - 주식상품 중 첫 번째
+        self.objOrder.SetInputValue(3, stockCode)
+        self.objOrder.SetInputValue(4, 1) # 매수수량

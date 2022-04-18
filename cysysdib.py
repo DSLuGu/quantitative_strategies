@@ -5,7 +5,6 @@ import time
 
 from collections import defaultdict
 
-from PyQt5.QtWidgets import *
 import win32com.client
 
 
