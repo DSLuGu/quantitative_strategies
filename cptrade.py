@@ -193,6 +193,7 @@ class Cp3011:
 
 
 class NotConcludedData:
+    '''미체결 주문정보 저장 구조체'''
     
     def __init__(self):
         
@@ -315,4 +316,62 @@ class Cp5339:
                 break
         
         return True
+
+
+class Cp3014:
+    '''장내주식/코스닥주식/ELW 주문관리 (취소 주문) 데이터를 요청하고 수신'''
+    
+    @check_plus_status
+    def __init__(self):
         
+        self.objTrade = win32com.client.Dispatch('CpTrade.CpTdUtil')
+        # 주문을 하기 위한 예비 과정을 수행
+        # -1: 오류, 0: 정상, 1: 업무 키 입력 잘못 됨, 2: 계좌 비밀번호 입력 잘못 됨, 3: 취소
+        initCheck = self.objTrade.TradeInit(0)
+        if initCheck != 0:
+            print("Fail to initialize order...")
+            return None
+        
+        self.account = self.objTrade.AccountNumber[0]
+        self.accountFlag = self.objTrade.GoodsList(self.account, 1)
+        
+        self.objRq = win32com.client.Dispatch('CpTrade.CpTd3014')
+        
+        self.callback = None
+        self.bIsRq = False
+        self.rqOrderNum = 0 # 취소 주문 중인 주문번호
+    
+    def rq3014(self, orderNum, stockCode, amount):
+        '''
+        :param orderNum: 원주문번호 - 정정을 하려는 주문번호
+        :param stockCode: 종목코드
+        :param amount: 정정 수량 - 0이면 잔량 취소
+        
+        :return:
+        '''
+        
+        print("[Cp3014]Cancel order not concluded...")
+
+        self.objRq.SetInputValue(1, orderNum)
+        self.objRq.SetInputValue(2, self.account)
+        self.objRq.SetInputValue(3, self.accountFlag[0])
+        self.objRq.SetInputValue(4, stockCode)
+        self.objRq.SetInputValue(5, amount)
+        
+        ret = 0
+        while True:
+            ret = self.objRq.BlockRequest()
+            if ret == 0: break
+            
+            print(f">>>Fail to request... (ret: {ret})")
+            if ret == 4:
+                print(">>>", end="")
+                avoid_rq_limit_warning()
+                continue
+            else: # 1:통신요청 실패, 2:그 외의 오류, 4:주문요청제한 개수 초과
+                return False
+        
+        print(">>>주문결과: ", self.objRq.GetDibStatus(), self.objRq.GetDibMsg1())
+        if self.objRq.GetDibStatus() != 0: return False
+        
+        return True
