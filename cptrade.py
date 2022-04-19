@@ -27,6 +27,16 @@ def check_plus_status(originalFunc):
     return wrapper
 
 
+def avoid_rq_limit_warning():
+    '''Creon API의 요청제한 횟수를 지키기 위한 메소드'''
+    
+    remainTime = self.g_objCpCybos.LimitRequestRemainTime
+    remainCount = self.g_objCpCybos.GetLimitRemainCount(1)
+    if remainCount <= 3: time.sleep(remainTime / 1000)
+    
+    return None
+
+
 class Cp6033:
     '''계좌별 잔고 및 주문체결 평가 현황 데이터를 요청 및 수신'''
     
@@ -65,7 +75,6 @@ class Cp6033:
         
         return True
     
-    @check_plus_status
     def rq6033(self, retCode):
         '''실제적인 6033 통신 처리'''
         
@@ -131,13 +140,13 @@ class Cp3011:
         self.account = self.objTrade.AccountNumber[0]
         self.accountFlag = self.objTrade.GoodsList(self.account, 1)
         
-        self.objOrder = win32com.client.Dispatch('CpTrade.CpTd3011') # 매도/매수 object
+        self.objRq = win32com.client.Dispatch('CpTrade.CpTd3011') # 매도/매수 object
     
     def _check_rq_status(self):
         '''BlockRequest() 요청 후 통신상태 검사'''
         
-        rqStatus = self.objOrder.GetDibStatus()
-        rqRet = self.objOrder.GetDibMsg1()
+        rqStatus = self.objRq.GetDibStatus()
+        rqRet = self.objRq.GetDibMsg1()
         
         if rqStatus == 0:
             print("Request Status is normal[{}]{}".format(rqStatus, rqRet))
@@ -147,7 +156,6 @@ class Cp3011:
         
         return True
     
-    @check_plus_status
     def rq3011(self, buyOrSell, stockCode, orderCnt, orderPrice, orderFlag="01"):
         '''주식 주문 메소드
         
@@ -165,19 +173,146 @@ class Cp3011:
             72:시간외대량, 73:신고대량(종가), 77:금전신탁종가대량, 
             79:시간외대량자기, 80:시간외바스켓, 
         }
+        
+        :return:
         '''
 
-        self.objOrder.SetInputValue(0, buyOrSell)
-        self.objOrder.SetInputValue(1, self.account)
-        self.objOrder.SetInputValue(2, self.accountFlag[0]) # 상품구분 - 주식상품 중 첫 번째
-        self.objOrder.SetInputValue(3, stockCode)
-        self.objOrder.SetInputValue(4, orderCnt)
-        self.objOrder.SetInputValue(5, orderPrice)
-        self.objOrder.SetInputValue(7, "0") # 주문조건구분코드 매매조건, {0:없음, 1:IOC, 2:FOK}
-        self.objOrder.SetInputValue(8, orderFlag)
+        self.objRq.SetInputValue(0, buyOrSell)
+        self.objRq.SetInputValue(1, self.account)
+        self.objRq.SetInputValue(2, self.accountFlag[0]) # 상품구분 - 주식상품 중 첫 번째
+        self.objRq.SetInputValue(3, stockCode)
+        self.objRq.SetInputValue(4, orderCnt)
+        self.objRq.SetInputValue(5, orderPrice)
+        self.objRq.SetInputValue(7, "0") # 주문조건구분코드 매매조건, {0:없음, 1:IOC, 2:FOK}
+        self.objRq.SetInputValue(8, orderFlag)
         
-        self.objOrder.BlockRequest()
+        self.objRq.BlockRequest()
         if not self._check_rq_status(): return False
         
         return True
+
+
+class NotConcludedData:
     
+    def __init__(self):
+        
+        self.stockCode = ""     # 종목코드
+        self.stockName = ""     # 종목명
+        self.orderNum = 0       # 주문번호
+        self.orderPrevNum = 0   # 원주문번호
+        self.orderDesc = ""     # 주문구분내용
+        self.amount = 0         # 주문수량
+        self.price = 0          # 주문단가
+        self.concAmount = 0     # 체결수량
+        self.credit = ""        # 신용구분 (현금, 유통융자, 자기융자, 유통대주, 자기대주)
+        self.modAvaliAmount = 0 # 정정/취소 가능 수량
+        self.buyOrSell = ""     # 매매구분코드 {1:매도, 2:매수}
+        self.creditDate = ""    # 대출일
+        self.orderFlag = ""     # 주문호가 구분코드
+        self.orderFlagDesc = "" # 주문호가 구분코드 내용
+        
+        self.concDic = {'1': '체결', '2': '확인', '3': '거부', '4': '접수'}
+        self.buyOrSellDic = {'1': '매도', '2': '매수'}
+
+
+class Cp5339:
+    '''계좌별 미체결 잔량 데이터를 요청하고 수신'''
+    
+    @check_plus_status
+    def __init__(self):
+        
+        self.objTrade = win32com.client.Dispatch('CpTrade.CpTdUtil')
+        # 주문을 하기 위한 예비 과정을 수행
+        # -1: 오류, 0: 정상, 1: 업무 키 입력 잘못 됨, 2: 계좌 비밀번호 입력 잘못 됨, 3: 취소
+        initCheck = self.objTrade.TradeInit(0)
+        if initCheck != 0:
+            print("Fail to initialize order...")
+            return None
+        
+        self.account = self.objTrade.AccountNumber[0]
+        self.accountFlag = self.objTrade.GoodsList(self.account, 1)
+        # 미체결 조회 object
+        self.objRq = win32com.client.Dispatch('CpTrade.CpTd5339')
+    
+    def _check_rq_status(self):
+        '''BlockRequest() 요청 후 통신상태 검사'''
+        
+        rqStatus = self.objRq.GetDibStatus()
+        rqRet = self.objRq.GetDibMsg1()
+        
+        if rqStatus == 0:
+            print("Request Status is normal[{}]{}".format(rqStatus, rqRet))
+        else:
+            print("Request Status is abnormal[{}]{}".format(rqStatus, rqRet))
+            return False
+        
+        return True
+    
+    def rq5339(self, orderDicList, orderList, rqCnt=20):
+        '''
+        :param orderDicList:
+        :param orderList:
+        :param rqCnt: 요청개수(최대 20개)
+        
+        :type 4: 주문구분코드, {
+            0:전체, 1:거래소주식, 2:장내채권, 3:코스닥주식, 4:장외단주, 5:프리보드
+        }
+        :type 5: 정렬구분코드, {0:순차, 1:역순}
+        :type 6: 주문종가구분코드, {0:전체, 1:일반, 2:시간외종가, 4:시간외단일가}
+        :type 7: 요청개수(최대 20개)
+        :return:
+        '''
+        
+        self.objRq.SetInputValue(0, self.account)
+        self.objRq.SetInputValue(1, self.accountFlag[0])
+        self.objRq.SetInputValue(4, "0")
+        self.objRq.SetInputValue(5, "1")
+        self.objRq.SetInputValue(6, "0")
+        self.objRq.SetInputValue(7, rqCnt)
+        
+        print("[Cp5339]Start searching to orders not concluded...")
+        while True:
+            ret = self.objRq.BlockRequest()
+            if not self._check_rq_status(): return False
+            
+            if ret == 2 or ret == 3:
+                print(">>>Request error...", ret)
+                return False
+            
+            # 통신 초과 요청 방지에 의한 오류인 경우
+            while ret == 4: # 연속 주문 오류, 이 경우는 남은 시간동안 반드시 대기
+                print(">>>", end="")
+                avoid_rq_limit_warning()
+                ret = self.objRq.BlockRequest()
+            
+            cnt = self.objRq.GetHeaderValue(5)
+            print(">>>수신개수:", cnt)
+            if cnt == 0: break
+            
+            for i in range(cnt):
+                data = NotConcludedData()
+                data.orderNum = self.objRq.GetDataValue(1, i)
+                data.orderPrevNum = self.objRq.GetDataValue(2, i)
+                data.stockCode = self.objRq.GetDataValue(3, i)
+                data.stockName = self.objRq.GetDataValue(4, i)
+                data.orderDesc = self.objRq.GetDataValue(5, i)
+                data.amount = self.objRq.GetDataValue(6, i)
+                data.price = self.objRq.GetDataValue(7, i)
+                data.concAmount = self.objRq.GetDataValue(8, i)
+                data.credit = self.objRq.GetDataValue(9, i)
+                data.modAvaliAmount = self.objRq.GetDataValue(11, i)
+                data.buyOrSell = self.objRq.GetDataValue(13, i)
+                data.creditDate = self.objRq.GetDataValue(17, i)
+                data.orderFlag = self.objRq.GetDataValue(19, i)
+                data.orderFlagDesc = self.objRq.GetDataValue(21, i)
+                
+                orderDicList[data.orderNum] = data
+                orderList.append(data)
+            
+            # 연속 처리 체크 - 다음 데이터가 없으면 중지
+            if self.objRq.Continue == False:
+                print(">>>No next data...")
+                break
+        
+        return True
+        
