@@ -115,7 +115,7 @@ class Cp6033:
         return True
 
 
-class CpRPOrder:
+class Cp3011:
     
     @check_plus_status
     def __init__(self):
@@ -133,11 +133,51 @@ class CpRPOrder:
         
         self.objOrder = win32com.client.Dispatch('CpTrade.CpTd3011') # 매도/매수 object
     
-    @check_plus_status
-    def buy(self):
+    def _check_rq_status(self):
+        '''BlockRequest() 요청 후 통신상태 검사'''
         
-        self.objOrder.SetInputValue(0, '2') # 2: 매수
+        rqStatus = self.objOrder.GetDibStatus()
+        rqRet = self.objOrder.GetDibMsg1()
+        
+        if rqStatus == 0:
+            print("Request Status is normal[{}]{}".format(rqStatus, rqRet))
+        else:
+            print("Request Status is abnormal[{}]{}".format(rqStatus, rqRet))
+            return False
+        
+        return True
+    
+    @check_plus_status
+    def rq3011(self, buyOrSell, stockCode, orderCnt, orderPrice, orderFlag="01"):
+        '''주식 주문 메소드
+        
+        :param buyOrSell: 주문 구분, {1:매도, 2:매수}
+        :param stockCode: 종목코드
+        :param orderCnt: 주문수량
+        :param orderPrice: 주문금액
+        :param orderFlag: 주문호가구분코드, {
+            01:보통, 02:임의, 03:시장가, 05:조건부지정가, 06:희망대량, 
+            09:자사주, 10:스톡옵션자사주, 11:금전신탁자사주, 
+            12:최유리지정가, 13:최우선지정가, 23:임의시장가, 
+            25:임의조건부지정가, 51:장중대량, 52:장중바스켓, 
+            61:개시전종가, 62:개시전종가대량, 63:개시전시간외바스켓, 
+            67:개시전금전신탁자사주, 69:개시전대량자기, 71:신고대량(전장시가), 
+            72:시간외대량, 73:신고대량(종가), 77:금전신탁종가대량, 
+            79:시간외대량자기, 80:시간외바스켓, 
+        }
+        '''
+
+        self.objOrder.SetInputValue(0, buyOrSell)
         self.objOrder.SetInputValue(1, self.account)
         self.objOrder.SetInputValue(2, self.accountFlag[0]) # 상품구분 - 주식상품 중 첫 번째
         self.objOrder.SetInputValue(3, stockCode)
-        self.objOrder.SetInputValue(4, 1) # 매수수량
+        self.objOrder.SetInputValue(4, orderCnt)
+        self.objOrder.SetInputValue(5, orderPrice)
+        self.objOrder.SetInputValue(7, "0") # 주문조건구분코드 매매조건, {0:없음, 1:IOC, 2:FOK}
+        self.objOrder.SetInputValue(8, orderFlag)
+        
+        self.objOrder.BlockRequest()
+        if not self._check_rq_status(): return False
+        
+        return True
+    
