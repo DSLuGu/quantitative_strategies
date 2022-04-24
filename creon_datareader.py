@@ -113,7 +113,7 @@ class CreonDataReader:
                 tickUnit = 'month'
             elif data0[0] % 10 == 0: # 주봉인 경우
                 tickUnit = 'week'
-            else: # 일본인 경우
+            else: # 일봉인 경우
                 tickUnit = 'day'
         
         dbCodeDF = pd.DataFrame({
@@ -188,6 +188,8 @@ class CreonDataReader:
                 
                 # 메모리 overflow 방지
                 del df; gc.collect()
+        
+        return None
 
 
 def main(config):

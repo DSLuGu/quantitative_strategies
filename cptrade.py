@@ -60,6 +60,8 @@ class Cp6033:
         self.objRq.SetInputValue(0, self.account) # 계죄번호
         self.objRq.SetInputValue(1, self.accountFlag[0]) # 상품구분 - 주식상품 중 첫 번째
         self.objRq.SetInputValue(2, 50) # 요청건수(최대 50)
+        
+        return None
     
     def _check_rq_status(self):
         '''BlockRequest() 요청 후 통신상태 검사'''
@@ -141,6 +143,8 @@ class Cp3011:
         self.accountFlag = self.objTrade.GoodsList(self.account, 1)
         
         self.objRq = win32com.client.Dispatch('CpTrade.CpTd3011') # 매도/매수 object
+        
+        return None
     
     def _check_rq_status(self):
         '''BlockRequest() 요청 후 통신상태 검사'''
@@ -214,6 +218,8 @@ class NotConcludedData:
         
         self.concDic = {'1': '체결', '2': '확인', '3': '거부', '4': '접수'}
         self.buyOrSellDic = {'1': '매도', '2': '매수'}
+        
+        return None
 
 
 class Cp5339:
@@ -234,6 +240,8 @@ class Cp5339:
         self.accountFlag = self.objTrade.GoodsList(self.account, 1)
         # 미체결 조회 object
         self.objRq = win32com.client.Dispatch('CpTrade.CpTd5339')
+        
+        return None
     
     def _check_rq_status(self):
         '''BlockRequest() 요청 후 통신상태 검사'''
@@ -337,9 +345,7 @@ class Cp3014:
         
         self.objRq = win32com.client.Dispatch('CpTrade.CpTd3014')
         
-        self.callback = None
-        self.bIsRq = False
-        self.rqOrderNum = 0 # 취소 주문 중인 주문번호
+        return None
     
     def rq3014(self, orderNum, stockCode, amount):
         '''
@@ -367,7 +373,6 @@ class Cp3014:
             if ret == 4:
                 print(">>>", end="")
                 avoid_rq_limit_warning()
-                continue
             else: # 1:통신요청 실패, 2:그 외의 오류, 4:주문요청제한 개수 초과
                 return False
         
