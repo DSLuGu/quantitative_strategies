@@ -9,7 +9,7 @@ import pandas as pd
 
 from tqdm import trange
 
-from cysysdib import CpStockChart
+from cysysdib import CpStockChart, CpMarketEye
 from cputil import CpCodeMgr
 from utils import (
     is_time_possible_to_trade, available_latest_dttm, preformat_cjk
@@ -75,6 +75,40 @@ class CreonDataReader:
             'cumNetBuyingInstitution', 'advanceDeclineLine', 
             'advanceDeclineRatio', 'deposit', 'stockTurnoverRatio', 
             'transactionRatio', 'contrastSign'
+        ]
+        
+        # 0: ('종목코드', 'stockCode'), 1: ('시간', 'hhmm'), 2: ('대비부호', 'contrastSign'), 
+        # 3: ('전일대비', 'diff'), 4: ('현재가', 'curPrice'), 5: ('시가', 'open'), 6: ('고가', 'high'), 
+        # 7: ('저가', 'low'), 8: ('매도호가', 'sellingPrice'), 9: ('매수호가', 'askingPrice'), 
+        # 10: ('거래량', 'volume'), 11: ('거래대금', 'tradeVolume'), 12: ('장구분', 'marketType'), 
+        # 13: ('총매도호가잔량', 'totalRemainAmtSellPrice'), 14: ('총매수호가잔량', 'totalRemainAmtAskPrice'), 
+        # 15: ('최우선매도호가잔량', ''), 16: ('최우선매수호가잔량', ''), 
+        # 17: ('종목명', ''), 20: ('총상장주식수', ''), 
+        # 21: ('외국인보유비율', ''), 22: ('전일거래량', ''), 
+        # 23: ('전일종가', ''), 24: ('체결강도', ''), 25: ('체결구분', ''), 
+        # 27: ('미결제약정', ''), 28: ('예상체결가', ''), 
+        # 29: ('예상체결가대비', ''), 30: ('예상체결가대비부호', ''), 
+        # 31: ('예상체결수량', ''), 32: ('19일종가합', ''), 
+        # 33: ('상한가', ''), 34: ('하한가', ''), 35: ('매매수량단위', ''), 
+        # 36: ('시간외단일대비부호', ''), 37: ('시간외단일전일대비', ''), 
+        # 38: ('시간외단일현재가', ''), 39: ('시간외단일시가', ''), 
+        # 40: ('시간외단일고가', ''), 41: ('시간외단일저가', ''), 
+        # 42: ('시간외단일매도호가', ''), 43: ('시간외단일매수호가', ''), 
+        # 44: ('시간외단일거래량', ''), 
+        # 45: ('시간외단일거래대금', ''), 
+        # 46: ('시간외단일총매도호가잔량', ''), 
+        # 47: ('시간외단일총매수호가잔량', ''), 
+        # 48: ('시간외단일최우선매도호가잔량', ''), 
+        # 49: ('시간외단일최우선매수호가잔량', ''), 
+        # 50: ('시간외단일체결강도', ''), 
+        # 51: ('시간외단일체결구분', ''), 
+        
+        
+        self.fsRqFields = [
+            0, 
+        ]
+        self.fsRqColumns = [
+            'stockCode', ''
         ]
     
     def update_db(self, dbPath, tickUnit='day'):

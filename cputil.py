@@ -1,5 +1,7 @@
+import os
 import sys
 import win32com.client
+from pywinauto import application
 
 
 class CpCodeMgr:
@@ -7,6 +9,8 @@ class CpCodeMgr:
     def __init__(self):
         
         self.objCodeMgr = win32com.client.Dispatch('CpUtil.CpCodeMgr')
+        
+        return None
     
     def code_list(self, market):
         '''market에 해당하는 종목코드 리스트 반환하는 메소드
@@ -71,4 +75,51 @@ class CpCodeMgr:
         '''장 마감 시각 반환하는 메소드'''
         
         return self.GetMarketEndTime()
+
+
+class Creon:
     
+    def __init__(self):
+        
+        self.objCpUtilCpCybos = win32com.client.Dispatch('CpUtil.CpCybos')
+        
+        return None
+    
+    def kill_client(self):
+        
+        os.system('taskkill /IM coStarter* /F /T')
+        os.system('taskkill /IM CpStart* /F /T')
+        os.system('taskkill /IM DibServer* /F /T')
+        os.system('wmic process where "name like \'%coStarter%\'" call terminate')
+        os.system('wmic process where "name like \'%CpStart%\'" call terminate')
+        os.system('wmic process where "name like \'%DibServer%\'" call terminate')
+        
+        return None
+    
+    def connect(self, _id, _pwd, _pwdcert):
+        
+        if not self.connected():
+            self.disconnect()
+            self.kill_client()
+            app = application.Application()
+            app.start(
+                'C:\CREON\STARTER\coStarter.exe /prj:cp /id:{id} /pwd:{pwd} /pwdcert:{pwdcert} /autostart'.format(
+                    id=_id, pwd=_pwd, pwdcert:_pwdcert
+                )
+            )
+        while not self.connected():
+            time.sleep(1)
+        
+        return True
+    
+    def connected(self):
+        
+        bConnected = self.objCpUtilCpCybos.IsConnect
+        if bConnected == 0: return False
+        
+        return True
+    
+    def disconnected(self):
+        
+        if self.connected():
+            self.objCpUtilCpCybos.PlusDisconnect()
