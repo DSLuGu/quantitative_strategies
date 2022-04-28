@@ -64,11 +64,11 @@ class CpMarketEye:
         return True
     
     @check_plus_status
-    def request(self, codes, rqField):
+    def request(self, stockCode, rqField):
         
         # Set request fields
         self.objRq.SetInputValue(0, rqField)
-        self.objRq.SetInputValue(1, codes) # a stockCode or stockCodes
+        self.objRq.SetInputValue(1, stockCode) # a stockCode or stockCodes
         self.objRq.BlockRequest()
         
         # Handle request error

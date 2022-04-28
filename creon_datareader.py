@@ -226,30 +226,30 @@ class CreonDataReader:
             cursor = con.cursor()
             tqdmRange = trange(len(fetchStockCodeDF), ncols=100)
             for i in tqdmRange:
-                stockCode = fetchStockCodeDF.iloc[i]
-                updateStatusMsg = "[{}] {}".format(stockCode[0], stockCode[1])
+                stockCodeName = fetchStockCodeDF.iloc[i]
+                updateStatusMsg = "[{}] {}".format(stockCodeName[0], stockCodeName[1])
                 tqdmRange.set_description(preformat_cjk(updateStatusMsg, 25))
                 
                 fromDate = 0
-                if stockCode[0] in dbStockCodeDF['stockCode'].tolist():
-                    cursor.execute("SELECT date FROM {} ORDER BY date DESC LIMIT 1;".format(stockCode[0]))
+                if stockCodeName[0] in dbStockCodeDF['stockCode'].tolist():
+                    cursor.execute("SELECT date FROM {} ORDER BY date DESC LIMIT 1;".format(stockCodeName[0]))
                     fromDate = cursor.fetchall()[0][0]
                 
                 if tickUnit == 'day':
                     if self.objStockChart.request_dwm(
-                        stockCode[0], ord('D'), count, self, fromDate
+                        stockCodeName[0], ord('D'), count, self, fromDate
                     ) == False: continue
                 elif tickUnit == 'week':
                     if self.objStockChart.request_dwm(
-                        stockCode[0], ord('W'), count, self, fromDate
+                        stockCodeName[0], ord('W'), count, self, fromDate
                     ) == False: continue
                 elif tickUnit == 'month':
                     if self.objStockChart.request_dwm(
-                        stockCode[0], ord('M'), count, self, fromDate
+                        stockCodeName[0], ord('M'), count, self, fromDate
                     ) == False: continue
                 elif tickUnit == '1min' or tickUnit == '5min':
                     if self.objStockChart.request_mt(
-                        stockCode[0], ord('m'), tickRange, count, self, fromDate
+                        stockCodeName[0], ord('m'), tickRange, count, self, fromDate
                     ) == False: continue
                 
                 df = pd.DataFrame(self.rcvData)
@@ -260,7 +260,7 @@ class CreonDataReader:
                     df = df.iloc[:-1]
                 
                 # 뒤집어서 저장 (결과적으로 date 기준 오름차순으로 저장됨)
-                df.iloc[::-1].to_sql(stockCode[0], con, if_exists='append')
+                df.iloc[::-1].to_sql(stockCodeName[0], con, if_exists='append')
                 
                 # 메모리 overflow 방지
                 del df; gc.collect()
