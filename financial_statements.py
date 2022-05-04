@@ -61,9 +61,9 @@ def main():
     dart.set_api_key(api_key=get_dart_api_key())
     
     corpList = dart.get_corp_list()
-    for corp in ecorpList[90060:]:
+    for i, corp in enumerate(corpList[90260:]):
         corpInfo = corp.load()
-        print(corpInfo)
+        print(i, corpInfo)
         
         try:
             fs = corp.extract_fs(bgn_de=corpInfo['est_dt'])
